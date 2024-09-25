@@ -1,5 +1,5 @@
-import { parse } from 'std/csv/mod.ts'
-import { assert, assertEquals, assertThrows } from 'std/assert/mod.ts'
+import { parse } from '@std/csv'
+import { assert, assertEquals, assertThrows } from '@std/assert'
 import { Alphabet, Codec, Converter, defaultConfig } from '../src/converter.js'
 import { CheckSumChecker } from '../src/converter.js'
 
@@ -127,15 +127,20 @@ Deno.test('Codec', async (t) => {
 		await t.step('props are readonly', () => {
 			void (() => {
 				// @ts-expect-error read-only property
-				codec.alphabet = {} as unknown as typeof codec.alphabet
+				// deno-lint-ignore no-self-assign
+				codec.alphabet = codec.alphabet
 				// @ts-expect-error read-only property
-				codec.chars = {} as unknown as typeof codec.chars
+				// deno-lint-ignore no-self-assign
+				codec.chars = codec.chars
 				// @ts-expect-error read-only property
-				codec.radix = {} as unknown as typeof codec.radix
+				// deno-lint-ignore no-self-assign
+				codec.radix = codec.radix
 				// @ts-expect-error read-only property
-				codec.values = {} as unknown as typeof codec.values
+				// deno-lint-ignore no-self-assign
+				codec.values = codec.values
 				// @ts-expect-error read-only property
-				codec.zeroChar = {} as unknown as typeof codec.zeroChar
+				// deno-lint-ignore no-self-assign
+				codec.zeroChar = codec.zeroChar
 			})
 		})
 	})

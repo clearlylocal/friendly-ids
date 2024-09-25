@@ -12,7 +12,7 @@
  * @typedef {{ kind: 'ok', result: string } | { kind: 'error', message: string }} Result
  */
 
-class Converter {
+export class Converter {
 	/** @param {Config} [config] */
 	constructor(config) {
 		/** @readonly */ this.config = config ?? defaultConfig
@@ -46,13 +46,13 @@ class Converter {
 	 */
 	revert(friendlyId) {
 		const checkDigit = friendlyId.at(-1)
-		assert(checkDigit, 'Friendly ID cannot be empty')
+		if (!checkDigit) throw new Error('Friendly ID cannot be empty')
 		const checkSum = this.checksCodec.decode(checkDigit)
 
 		const decoded = this.targetCodec.decode(friendlyId.slice(0, -1))
 
 		const expectedCheckSum = this.checker.getCheckSum(decoded)
-		assert(checkSum === expectedCheckSum, `Expected check sum ${expectedCheckSum}; actual ${checkSum}`)
+		if (checkSum !== expectedCheckSum) throw new Error(`Expected check sum ${expectedCheckSum}; actual ${checkSum}`)
 
 		const encoded = this.sourceCodec.encode(decoded)
 		const numberId = encoded.padStart(this.config.source.minLength, this.sourceCodec.zeroChar)
@@ -61,7 +61,7 @@ class Converter {
 	}
 }
 
-class Codec {
+export class Codec {
 	/** @param {string} alphabet */
 	constructor(alphabet) {
 		/** @readonly */ this.alphabet = alphabet
@@ -81,7 +81,7 @@ class Codec {
 
 		for (const [idx, char] of chars.entries()) {
 			const val = this.values.get(char)
-			assert(val != null, `${char} not found in alphabet`)
+			if (val == null) throw new Error(`${char} not found in alphabet`)
 			const place = length - BigInt(idx) - 1n
 			total += val * this.radix ** place
 		}
@@ -91,7 +91,7 @@ class Codec {
 
 	/** @param {bigint} num */
 	encode(num) {
-		assert(num >= 0n, `${num} is negative`)
+		if (num < 0n) throw new Error(`${num} is negative`)
 
 		/** @type {string[]} */
 		const encoded = []
@@ -110,13 +110,13 @@ class Codec {
 		let idx = 0
 		for (const char of text) {
 			if (char !== this.zeroChar) return idx
-			;++idx
+			++idx
 		}
 		return idx
 	}
 }
 
-class CheckSumChecker {
+export class CheckSumChecker {
 	/**
 	 * @param {bigint} radix - must be integer > 1
 	 * @param {bigint} mod - must be positive, prime integer > radix
@@ -135,7 +135,7 @@ class CheckSumChecker {
 		while (num) {
 			total += (num % this.radix) * i
 			num /= this.radix
-			;++i
+			++i
 		}
 
 		return total % this.mod
@@ -143,7 +143,7 @@ class CheckSumChecker {
 }
 
 /**  @enum {typeof Alphabet[keyof typeof Alphabet]} */
-const Alphabet = /** @type {const} */ ({
+export const Alphabet = /** @type {const} */ ({
 	/** https://en.wikipedia.org/wiki/Base62 */
 	Source: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz',
 	/** Base 28; lowercase only, OCR/human input optimized alphabet with ambiguous-looking chars removed */
@@ -153,19 +153,8 @@ const Alphabet = /** @type {const} */ ({
 })
 
 /** @type {Config} */
-const defaultConfig = {
+export const defaultConfig = {
 	source: { alphabet: Alphabet.Source, minLength: 5 },
 	target: { alphabet: Alphabet.Target, minLength: 6 },
 	checks: { alphabet: Alphabet.Checks },
 }
-
-/**
- * @param {unknown} condition
- * @param {string} [message]
- * @returns {asserts condition}
- */
-function assert(condition, message) {
-	if (!condition) throw new Error(message ?? 'Condition failed')
-}
-
-export { Alphabet, CheckSumChecker, Codec, Converter, defaultConfig }
